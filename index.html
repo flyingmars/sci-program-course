@@ -105,6 +105,7 @@
           z : initZV,
           type: 'contour',
           colorscale: 'heatmap',
+          showscale: false,
           contours: {
             coloring: 'lines',
             showlabels: true,
@@ -159,6 +160,7 @@
               height: (window.innerWidth > window.innerHeight) ? window.innerHeight : window.innerWidth  ,
               xaxis:{range: [0, this.gridNum*this.gridRes/1000]},
               yaxis:{range: [0, this.gridNum*this.gridRes/1000]},
+              showlegend: false
             };
             Plotly.newPlot(this.$refs.mydiv, this.drawData,this.layout);
           },
