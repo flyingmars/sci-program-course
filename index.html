@@ -30,6 +30,30 @@
                 <label for="grid-res">Grid Resolution [m]</label>
                 <input id="grid-res" type="text" class="form-control" v-model="gridRes" @change="modifyData">
               </div>
+              <div class="form-group col-xl-4 col-md-6 my-1">
+                <label for="int-step">Integral Step</label>
+                <input id="int-step" type="text" class="form-control" v-model="integralStep" >
+              </div>
+              <div class="form-group col-xl-4 col-md-6 my-1">
+                <label for="int-time-step">Integral Time Step [s]</label>
+                <input id="int-time-step" type="text" class="form-control" v-model="DT" >
+              </div>
+              <div class="form-group col-xl-4 col-md-6 my-1">
+                <label for="int-jump">Integral Track Jump</label>
+                <input id="int-jump" type="text" class="form-control" v-model="integralJump" >
+              </div>
+              <div class="form-group col-xl-4 col-md-6 my-1">
+                <label for="int-time-jump">Integral Time Jump</label>
+                <input id="int-time-jump" type="text" class="form-control" v-model="integralTimeJump" >
+              </div>
+              <div class="form-group col-xl-4 col-md-6 my-1">
+                <label for="friction-coeff">Friction Coeff</label>
+                <input id="friction-coeff" type="text" class="form-control" v-model="fraction_coeff" >
+              </div> 
+              <div class="form-group col-xl-4 col-md-6 my-1">
+                <label for="latitude">Latitude [degree]</label>
+                <input id="latitude" type="text" class="form-control" v-model="latitude_degree" >
+              </div>                      
             </div>
             <div class="row">
               <div class="form-group col-12 my-1">
@@ -104,16 +128,18 @@
               <!-- y: [16, 5, 11, 9], -->
               <!-- type: 'scatter' -->
             <!-- }], -->
-            drawData : genPressureField(30,300000),
             gridNum : 30,
             gridRes : 300000,
+            drawData : null,
             xPosition : [],
             yPosition : [],
-            omega : 7.2921E-5, 
-            _latitude: 45 / 180 * Math.PI, 
+            omega : 7.2921E-5,
+            latitude_degree:45,
             fraction_coeff: 0.000005/10,
             DT:1200,
             integralStep:30,
+            integralJump:2,
+            integralTimeJump:2,
             mathexpression:"1040 - 60 * Math.sqrt( (x-10) ** 2 + (y-10) ** 2 ) / 20",
             layout:null
           }
@@ -136,22 +162,25 @@
           drawWind:function(){
             this.xPosition = [];
             this.yPosition = [];
+            var _latitude = this.latitude_degree / 180 * Math.PI;
             var fieldP = this.drawData[0].z;
 
             for (var i=0;i<this.gridNum-1;i++){
+              if ( i % this.integralJump != 0 ) continue;
               for (var j=0;j<this.gridNum-1;j++){
+                if ( j % this.integralJump != 0 ) continue;
                 var x = i * this.gridRes / 1000 ;
                 var y = j * this.gridRes / 1000 ;
                 var u = 0;
                 var v = 0;
                   
                 for (var step=0;step<this.integralStep;step++){
-
-                  this.xPosition.push(x);
-                  this.yPosition.push(y);
-                  
-                  var du =  ( -1/1.225 * (fieldP[i+1][j]-fieldP[i][j]) * 100 / ( this.gridRes ) + 2 * this.omega * Math.sin(this._latitude) * v - this.fraction_coeff * u) * this.DT ;
-                  var dv =  ( -1/1.225 * (fieldP[i][j+1]-fieldP[i][j]) * 100 / ( this.gridRes ) - 2 * this.omega * Math.sin(this._latitude) * u - this.fraction_coeff * v) * this.DT ;
+                  if (step % this.integralTimeJump == 0){
+                    this.xPosition.push(x);
+                    this.yPosition.push(y);
+                  }
+                  var du =  ( -1/1.225 * (fieldP[i+1][j]-fieldP[i][j]) * 100 / ( this.gridRes ) + 2 * this.omega * Math.sin(_latitude) * v - this.fraction_coeff * u) * this.DT ;
+                  var dv =  ( -1/1.225 * (fieldP[i][j+1]-fieldP[i][j]) * 100 / ( this.gridRes ) - 2 * this.omega * Math.sin(_latitude) * u - this.fraction_coeff * v) * this.DT ;
 
   
                   x = x + u * this.DT /1000;
