@@ -24,7 +24,7 @@
           <form>
             <div class="row">
               <div class="form-group col-xl-4 col-md-6 my-1">
-                <label for="grid-num">Grid Number</label>
+                <label for="grid-num">Grid Number (Larger -> Slower)</label>
                 <input id="grid-num" type="text" class="form-control" v-model="gridNum" @change="modifyData">
               </div>
               <div class="form-group col-xl-4 col-md-6 my-1">
@@ -134,6 +134,8 @@
             drawData : null,
             xPosition : [],
             yPosition : [],
+            xStartPosition : [],
+            yStartPosition : [],            
             omega : 7.2921E-5,
             latitude_degree:45,
             fraction_coeff: 0.000005/10,
@@ -163,6 +165,8 @@
           drawWind:function(){
             this.xPosition = [];
             this.yPosition = [];
+            this.xStartPosition = [];
+            this.yStartPosition = [];            
             var _latitude = this.latitude_degree / 180 * Math.PI;
             var fieldP = this.drawData[0].z;
 
@@ -174,6 +178,8 @@
                 var y = j * this.gridRes / 1000 ;
                 var u = 0;
                 var v = 0;
+                this.xStartPosition.push(x);
+                this.yStartPosition.push(y);
                   
                 for (var step=0;step<this.integralStep;step++){
                   if (step % this.integralTimeJump == 0){
@@ -201,7 +207,13 @@
               type: 'scatter',
               marker: { size: 2 ,color:"#46c2f0"}
             };
-            
+            this.drawData[2] = {
+              x:this.xStartPosition,
+              y:this.yStartPosition,
+              mode: 'markers',
+              type: 'scatter',
+              marker: { size: 3 ,color:"#f24444"}
+            };
             Plotly.redraw(this.$refs.mydiv);
           }
         }
