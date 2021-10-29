@@ -27,9 +27,13 @@
                   <input id="grid-num" type="text" class="form-control" v-model="gridNum" @change="modifyData">
                 </div>
                 <div class="form-group col-3">
-                  <label for="grid-res">Grid Resolution</label>
+                  <label for="grid-res">Grid Resolution [m]</label>
                   <input id="grid-res" type="text" class="form-control" v-model="gridRes" @change="modifyData">
                 </div>
+                <div class="form-group col-2">
+                  <label for="btn-draw-wind"> </label>
+                  <div class="btn btn-primary" id="btn-draw-wind" @click="drawWind">Draw Wind!</div>
+                </div>                
             </div>
           </form>
         </div>
@@ -90,23 +94,72 @@
               <!-- y: [16, 5, 11, 9], -->
               <!-- type: 'scatter' -->
             <!-- }], -->
-            drawData : genPressureField(200,20000),
-            gridNum : 200,
-            gridRes : 20000,
-            message:"Hi",
+            drawData : genPressureField(20,200000),
+            gridNum : 20,
+            gridRes : 200000,
+            xPosition : [],
+            yPosition : [],
+            omega : 7.2921E-5, 
+            _latitude: 45 / 180 * Math.PI, 
+            fraction_coeff: 0.000005/10,
+            DT:1200,
+            integralStep:30,
+            layout:null
           }
         },
         mounted(){
-          Plotly.newPlot(this.$refs.mydiv, this.drawData);
+          this.modifyData()
         },
         methods:{
           modifyData:function(){
-            console.log(this.gridNum);
-            console.log(this.gridRes);
             this.drawData = genPressureField(this.gridNum,this.gridRes)
-            Plotly.newPlot(this.$refs.mydiv, this.drawData);
+            this.layout = {
+              xaxis:{range: [0, this.gridNum*this.gridRes/1000]},
+              yaxis:{range: [0, this.gridNum*this.gridRes/1000]}
+            };
+            Plotly.newPlot(this.$refs.mydiv, this.drawData,this.layout);
+          },
+          drawWind:function(){
+            this.xPosition = [];
+            this.yPosition = [];
+            var fieldP = this.drawData[0].z;
+
+            for (var i=0;i<this.gridNum-1;i++){
+              for (var j=0;j<this.gridNum-1;j++){
+                var x = i * this.gridRes / 1000 ;
+                var y = j * this.gridRes / 1000 ;
+                var u = 0;
+                var v = 0;
+                  
+                for (var step=0;step<this.integralStep;step++){
+
+                  this.xPosition.push(x);
+                  this.yPosition.push(y);
+                  
+                  var du =  ( -1/1.225 * (fieldP[i+1][j]-fieldP[i][j]) * 100 / ( this.gridRes ) + 2 * this.omega * Math.sin(this._latitude) * v - this.fraction_coeff * u) * this.DT ;
+                  var dv =  ( -1/1.225 * (fieldP[i][j+1]-fieldP[i][j]) * 100 / ( this.gridRes ) - 2 * this.omega * Math.sin(this._latitude) * u - this.fraction_coeff * v) * this.DT ;
+
+  
+                  x = x + u * this.DT /1000;
+                  y = y + v * this.DT /1000;
+                  
+                  u = u + du;
+                  v = v + dv;
+                  
+                }
+              }
+            }
+
+            this.drawData[1] = {
+              x:this.xPosition,
+              y:this.yPosition,
+              mode: 'markers',
+              type: 'scatter',
+              marker: { size: 2 ,color:"blue"}
+            };
+            
+            Plotly.redraw(this.$refs.mydiv);
           }
-          
         }
       });
       // mount
