@@ -16,13 +16,13 @@
   <body>
 
     <div class="row">
-      <div class="col-1"></div>
-      <div class="col-10">
+      <div class="col-2"></div>
+      <div class="col-8">
         <div id="app">
           <div id="mydiv" ref="mydiv"></div>
           <form>
             <div class="row">
-                <div class="form-group col-3">
+                <div class="form-group col-3 ">
                   <label for="grid-num">Grid Number</label>
                   <input id="grid-num" type="text" class="form-control" v-model="gridNum" @change="modifyData">
                 </div>
@@ -38,7 +38,7 @@
           </form>
         </div>
       </div>
-      <div class="col-1"></div>
+      <div class="col-2"></div>
     </div>
     <script>
       function genPressureField( gridNum, gridRes ){
@@ -115,7 +115,9 @@
             this.drawData = genPressureField(this.gridNum,this.gridRes)
             this.layout = {
               xaxis:{range: [0, this.gridNum*this.gridRes/1000]},
-              yaxis:{range: [0, this.gridNum*this.gridRes/1000]}
+              yaxis:{range: [0, this.gridNum*this.gridRes/1000]},
+              width: 700,
+              height: 700
             };
             Plotly.newPlot(this.$refs.mydiv, this.drawData,this.layout);
           },
@@ -143,8 +145,8 @@
                   x = x + u * this.DT /1000;
                   y = y + v * this.DT /1000;
                   
-                  u = u + du;
-                  v = v + dv;
+                  u = u + du ;
+                  v = v + dv ;
                   
                 }
               }
